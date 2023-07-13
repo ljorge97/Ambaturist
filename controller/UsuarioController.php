@@ -154,7 +154,7 @@ class UsuarioController extends ControladorBase
 						$usuario->__set("nombre", $nom);
 						$usuario->__set("apellido", $ap);
 						$usuario->__set("mail", $mail);
-						$usuario->__set("profilePic", "https://data.whicdn.com/images/325337009/large.jpg");
+						$usuario->__set("profilePic", "https://i.pinimg.com/564x/d2/97/a3/d297a3eced48990f8001c8624ec84145.jpg");
 						$usuario->__set("bday", $bd);
 						$pais = new Pais($this->adapter);
 						$pais->__set("id", $_POST["country"]);
