@@ -116,55 +116,60 @@ class UsuarioController extends ControladorBase
 	//Procesa los datos del formulario de inserción
 	public function crear()
 	{
-		if (isset($_POST["username"]) && trim($_POST['username']) != "") {
-			$pass1 = isset($_POST['pass']) ? $_POST['pass'] : "";
-			$pass2 = isset($_POST['pass1']) ? $_POST['pass1'] : "";
-			if ($pass1 != $pass2) {
-				$_SESSION['error'] = "Las contraseñas no coinciden.";
-				$this->registrarse();
-			} else {
-				//Creamos un usuario
-				$usuario = new Usuario($this->adapter);
-				$val = $usuario->getOneBy("username", $_POST['username']);
-				$valMail = $usuario->getOneBy("mail", $_POST['mail']);
-				if ($val) {
-					$_SESSION['error'] = "Nombre de usuario no disponible.";
-					$this->registrarse();
-				} else if (substr_count($_POST['username'], " ") > 0) {
-					$_SESSION['error'] = "El nombre de usuario no debe contener espacios";
-					$this->registrarse();
-				} else if ($valMail) {
-					$_SESSION['error'] = "El mail ya se encuntra registrado";
+		try {
+			if (isset($_POST["username"]) && trim($_POST['username']) != "") {
+				$pass1 = isset($_POST['pass']) ? $_POST['pass'] : "";
+				$pass2 = isset($_POST['pass1']) ? $_POST['pass1'] : "";
+				if ($pass1 != $pass2) {
+					$_SESSION['error'] = "Las contraseñas no coinciden.";
 					$this->registrarse();
 				} else {
-					$nom = NULL != trim($_POST["nombre"]) ? $_POST['nombre'] : NULL;
-					$ap = NULL != trim($_POST["apellido"]) ? $_POST['apellido'] : NULL;
-					$bd = NULL != $_POST['bd'] ? $_POST['bd'] : NULL;
-					$mail = isset($_POST["mail"]) ? $_POST["mail"] : NULL;
-					$si = filter_var($mail, FILTER_VALIDATE_EMAIL);
-					if (!$nom || !$ap || !$si) {
-						$_SESSION['error'] = "Datos personales incorrectos.";
+					//Creamos un usuario
+					$usuario = new Usuario($this->adapter);
+					$val = $usuario->getOneBy("username", $_POST['username']);
+					$valMail = $usuario->getOneBy("mail", $_POST['mail']);
+					if ($val) {
+						$_SESSION['error'] = "Nombre de usuario no disponible.";
+						$this->registrarse();
+					} else if (substr_count($_POST['username'], " ") > 0) {
+						$_SESSION['error'] = "El nombre de usuario no debe contener espacios";
+						$this->registrarse();
+					} else if ($valMail) {
+						$_SESSION['error'] = "El mail ya se encuntra registrado";
 						$this->registrarse();
 					} else {
-						$usuario->__set('username', $_POST['username']);
-						$salt = bin2hex(random_bytes(32));
-						$usuario->__set("salt", $salt);
-						$password = $_POST['pass'] . $salt;
-						$usuario->__set('pass', hash('sha256', $password));
-						$usuario->__set("nombre", $nom);
-						$usuario->__set("apellido", $ap);
-						$usuario->__set("mail", $mail);
-						$usuario->__set("profilePic", "https://i.pinimg.com/564x/d2/97/a3/d297a3eced48990f8001c8624ec84145.jpg");
-						$usuario->__set("bday", $bd);
-						$pais = new Pais($this->adapter);
-						$pais->__set("id", $_POST["country"]);
-						$usuario->__set("pais", $pais);
-						$save = $usuario->save();
-						$_SESSION['error'] = "Usuario registrado con exito";
-						$this->redirect("Usuario", "index");
+						$nom = NULL != trim($_POST["nombre"]) ? $_POST['nombre'] : NULL;
+						$ap = NULL != trim($_POST["apellido"]) ? $_POST['apellido'] : NULL;
+						$bd = NULL != $_POST['bd'] ? $_POST['bd'] : NULL;
+						$mail = isset($_POST["mail"]) ? $_POST["mail"] : NULL;
+						$si = filter_var($mail, FILTER_VALIDATE_EMAIL);
+						if (!$nom || !$ap || !$si) {
+							$_SESSION['error'] = "Datos personales incorrectos.";
+							$this->registrarse();
+						} else {
+							$usuario->__set('username', $_POST['username']);
+							$salt = bin2hex(random_bytes(32));
+							$usuario->__set("salt", $salt);
+							$password = $_POST['pass'] . $salt;
+							$usuario->__set('pass', hash('sha256', $password));
+							$usuario->__set("nombre", $nom);
+							$usuario->__set("apellido", $ap);
+							$usuario->__set("mail", $mail);
+							$usuario->__set("profilePic", "https://i.pinimg.com/564x/d2/97/a3/d297a3eced48990f8001c8624ec84145.jpg");
+							$usuario->__set("bday", $bd);
+							$pais = new Pais($this->adapter);
+							$pais->__set("id", $_POST["country"]);
+							$usuario->__set("pais", $pais);
+							$save = $usuario->save();
+							$_SESSION['error'] = "Usuario registrado con exito";
+							$this->redirect("Usuario", "index");
+						}
 					}
 				}
 			}
+		} catch (\Throwable $th) {
+			$_SESSION['error'] = "Usuario no se pudo registrar ".$th;
+			$this->registrarse();
 		}
 	}
 
