@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: labii-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: labii
+      MYSQL_ROOT_PASSWORD: admin.root
+      MYSQL_PASSWORD: password
+      MYSQL_USER: jorge
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - labii-data:/var/lib/mysql
+    networks:
+      - labii-net
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - PHP_MAX_EXECUTION_TIME=300
+    networks:
+      - labii-net
+networks:
+  labii-net:
+    driver: bridge
+
+volumes:
+  labii-data:
