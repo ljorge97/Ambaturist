@@ -168,7 +168,7 @@ class UsuarioController extends ControladorBase
 				}
 			}
 		} catch (\Throwable $th) {
-			$_SESSION['error'] = "Usuario no se pudo registrar ".$th;
+			$_SESSION['error'] = "Usuario no se pudo registrar " . $th;
 			$this->registrarse();
 		}
 	}
@@ -449,60 +449,65 @@ class UsuarioController extends ControladorBase
 	//Procesa los datos del formulario de edición
 	public function actualizar()
 	{
-		$id = $_SESSION["id"];
-		$usuario = new Usuario($this->adapter);
-		$ud = $usuario->getOneBy("id", $id);
-		$salt = $ud['salt'];
-		$pw = $ud['pass'];
-		$pass = isset($_POST['pass']) ? $_POST['pass'] . $salt : "";
-		$hashedTry = hash('sha256', $pass);
-		if ($hashedTry != $pw) {
-			$strError = "Contraseña incorrecta";
-			echo $strError;
-		} else {
-			$nom = isset($_POST["nombre"]) ? $_POST['nombre'] : NULL;
-			$ap = isset($_POST["apellido"]) ? $_POST['apellido'] : NULL;
-			$mail = isset($_POST["mail"]) ? $_POST["mail"] : NULL;
-			$profilePic = isset($_POST["actual"]) ? $_POST["actual"] : NULL;
-			if (!$nom || !$ap || !$mail) {
-				$strError = "Datos faltantes";
+		try {
+			$id = $_SESSION["id"];
+			$usuario = new Usuario($this->adapter);
+			$ud = $usuario->getOneBy("id", $id);
+			$salt = $ud['salt'];
+			$pw = $ud['pass'];
+			$pass = isset($_POST['pass']) ? $_POST['pass'] . $salt : "";
+			$hashedTry = hash('sha256', $pass);
+			if ($hashedTry != $pw) {
+				$strError = "Contraseña incorrecta";
 				echo $strError;
 			} else {
-				$usuario->__set("id", $id);
-				$hoy = strftime("%Y-%m-%d-%H-%M-%S", time());
-				$usuario->__set('fechaUltMod', $hoy);
-				$usuario->__set("nombre", $nom);
-				$usuario->__set("apellido", $ap);
-				$usuario->__set("mail", $mail);
-				if ($profilePic) {
-					$usuario->__set("profilePic", $profilePic);
-				}
-				$fileName = $_FILES['profilePic']['name'];
-				$tmpName = $_FILES['profilePic']['tmp_name'];
-				$fileSize = $_FILES['profilePic']['size'];
-				$fileType = $_FILES['profilePic']['type'];
-				if ($fileType == "image/jpeg" || $fileType == "image/jpg" || $fileType == "image/png" || $fileType == "image/gif") {
-					$imagenes = $_SERVER['DOCUMENT_ROOT'] . "/LABII/public/img/profile/";
-					$extension = explode("/", $fileType);
-					$fileName = $ud['username'] . '.' . $extension[1];
-					$filePath = $imagenes . $fileName;
-					$serverName = "http://44.201.237.179/LABII/public/img/profile/" . $fileName;
-					if ($result = move_uploaded_file($tmpName, $filePath)) {
-						$usuario->__set("profilePic", $serverName);
-					} else {
-						echo "no se subio";
-						exit;
+				$nom = isset($_POST["nombre"]) ? $_POST['nombre'] : NULL;
+				$ap = isset($_POST["apellido"]) ? $_POST['apellido'] : NULL;
+				$mail = isset($_POST["mail"]) ? $_POST["mail"] : NULL;
+				$profilePic = isset($_POST["actual"]) ? $_POST["actual"] : NULL;
+				if (!$nom || !$ap || !$mail) {
+					$strError = "Datos faltantes";
+					echo $strError;
+				} else {
+					$usuario->__set("id", $id);
+					$hoy = strftime("%Y-%m-%d-%H-%M-%S", time());
+					$usuario->__set('fechaUltMod', $hoy);
+					$usuario->__set("nombre", $nom);
+					$usuario->__set("apellido", $ap);
+					$usuario->__set("mail", $mail);
+					if ($profilePic) {
+						$usuario->__set("profilePic", $profilePic);
 					}
+					$fileName = $_FILES['profilePic']['name'];
+					$tmpName = $_FILES['profilePic']['tmp_name'];
+					$fileSize = $_FILES['profilePic']['size'];
+					$fileType = $_FILES['profilePic']['type'];
+					if ($fileType == "image/jpeg" || $fileType == "image/jpg" || $fileType == "image/png" || $fileType == "image/gif") {
+						$imagenes = $_SERVER['DOCUMENT_ROOT'] . "/LABII/public/img/profile/";
+						$extension = explode("/", $fileType);
+						$fileName = $ud['username'] . '.' . $extension[1];
+						$filePath = $imagenes . $fileName;
+						$serverName = "http://44.201.237.179/LABII/public/img/profile/" . $fileName;
+						if ($result = move_uploaded_file($tmpName, $filePath)) {
+							$usuario->__set("profilePic", $serverName);
+						} else {
+							echo "no se subio";
+							exit;
+						}
+					}
+
+					$usuario->__set("bday", $_POST["bd"]);
+					$pais = new Pais($this->adapter);
+					$pais->__set("id", $_POST["country"]);
+					$usuario->__set("pais", $pais);
+					$save = $usuario->save();
+					$this->verMuro();
 				}
 
-				$usuario->__set("bday", $_POST["bd"]);
-				$pais = new Pais($this->adapter);
-				$pais->__set("id", $_POST["country"]);
-				$usuario->__set("pais", $pais);
-				$save = $usuario->save();
-				$this->verMuro();
 			}
-
+		} catch (\Throwable $th) {
+			echo "no se subio ".$th;
+			exit;
 		}
 	}
 }
